@@ -1,0 +1,73 @@
+
+  {
+    "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.19/MicrosoftTeams.schema.json",
+    "manifestVersion": "1.19",
+    "id": "7d3f7e64-1dcb-4e98-8e0c-84af1c4f3201",
+    "version": "1.0.0",
+    "developer": {
+        "name": "Jose Assuncao",
+        "websiteUrl": "https://www.microsoft.com",
+        "privacyUrl": "https://www.microsoft.com/privacy.html",
+        "termsOfUseUrl": "https://www.microsoft.com/termsofuse.html"
+    },
+    "name": {
+        "short": "Liga da Leitura",
+        "full": "Liga da Leitura"
+    },
+    "description": {
+        "short": "App para acompanhar a leitura de livros.",
+        "full": "App para acompanhar a leitura de livros. O app permite que os usuários registrem os livros que estão lendo, compartilhem suas leituras com amigos e participem de desafios de leitura. Além disso, o app oferece recomendações personalizadas com base nas preferências de leitura dos usuários.   "
+    },
+    "icons": {
+        "outline": "icon-outline.png",
+        "color": "icon-color.png"
+    },
+    "accentColor": "#D85028",
+    "staticTabs": [
+        {
+            "entityId": "sample.app.welcome",
+            "name": "Hub",
+            "contentUrl": "https://localhost:53000/welcome",
+            "scopes": [
+                "personal"
+            ]
+        },
+        {
+            "entityId": "sample.app.my_books_tab",
+            "name": "Meus Livros",
+            "contentUrl": "https://localhost:53000/books",
+            "scopes": [
+                "personal"
+            ]
+        },
+        {
+            "entityId": "sample.app.descobrir",
+            "name": "descobrir",
+            "contentUrl": "https://localhost:53000/descobrir",
+            "scopes": [
+                "personal"
+            ]
+        },
+        {
+            "entityId": "sample.app.desafios",
+            "name": "desafios",
+            "contentUrl": "https://localhost:53000/desafios",
+            "scopes": [
+                "personal"
+            ]
+        },
+        {
+            "entityId": "sample.app.Ranking",
+            "name": "Ranking",
+            "contentUrl": "https://localhost:53000/Ranking",
+            "scopes": [
+                "personal"
+            ]
+        }
+    ],
+    "validDomains": [
+        "localhost:53000",
+        "${{TAB_ENDPOINT}}"
+
+    ]
+}

@@ -1,0 +1,59 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.19/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.19",
+  "id": "${{TEAMS_APP_ID}}",
+  "version": "1.0.0",
+  "developer": {
+    "name": "Jos",
+    "websiteUrl": "https://${{TAB_DOMAIN}}",
+    "privacyUrl": "https://${{TAB_DOMAIN}}/privacy.html",
+    "termsOfUseUrl": "https://${{TAB_DOMAIN}}/tou.html"
+  },
+  "name": {
+    "short": "Liga da Leitura",
+    "full": "Liga da Leitura"
+  },
+ "description": {
+  "short": "Aplicação educativa que incentiva a leitura com gamificação no Microsoft Teams.",
+  "full": "Esta aplicação foi criada para promover o gosto pela leitura entre os alunos do 1.º ciclo, através de desafios, quizzes, pontos e medalhas. Integrada no Microsoft Teams, permite aos professores acompanhar o progresso dos alunos em tempo real, tornando a leitura uma experiência divertida, envolvente e pedagógica."
+},
+  "icons": {
+    "outline": "icon-outline.png",
+    "color": "icon-color.png"
+  },
+  "accentColor": "#D85028",
+  "staticTabs": [
+    {
+      "entityId": "sample.app.welcome",
+      "name": "Hub",
+      "contentUrl": "https://${{TAB_DOMAIN}}/welcome",
+      "scopes": [ "personal" ]
+    },
+    {
+      "entityId": "sample.app.my_books_tab",
+      "name": "Meus Livros",
+      "contentUrl": "https://${{TAB_DOMAIN}}/books",
+      "scopes": [ "personal" ]
+    },
+    {
+      "entityId": "sample.app.descobrir",
+      "name": "descobrir",
+      "contentUrl": "https://${{TAB_DOMAIN}}/descobrir",
+      "scopes": [ "personal" ]
+    },
+    {
+      "entityId": "sample.app.desafios",
+      "name": "desafios",
+      "contentUrl": "https://${{TAB_DOMAIN}}/desafios",
+      "scopes": [ "personal" ]
+    },
+ 
+    {
+      "entityId": "sample.app.Ranking",
+      "name": "Ranking",
+      "contentUrl": "https://${{TAB_DOMAIN}}/Ranking",
+      "scopes": [ "personal" ]
+    }
+  ],
+  "validDomains": [ "${{TAB_DOMAIN}}" ]
+}
