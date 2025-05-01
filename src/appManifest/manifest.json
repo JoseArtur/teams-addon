@@ -4,7 +4,7 @@
   "id": "${{TEAMS_APP_ID}}",
   "version": "1.0.0",
   "developer": {
-    "name": "Jos",
+    "name": "Jose Assuncao",
     "websiteUrl": "https://${{TAB_DOMAIN}}",
     "privacyUrl": "https://${{TAB_DOMAIN}}/privacy.html",
     "termsOfUseUrl": "https://${{TAB_DOMAIN}}/tou.html"

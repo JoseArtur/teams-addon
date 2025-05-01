@@ -1,92 +1,45 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
-  Button,
-  Card,
-  CardHeader,
-  Divider,
-  Dropdown,
-  Text,
-  Table,
-  TableHeader,
-  TableRow,
-  TableBody,
-  TableCell,
-  TableHeaderCell,
-  Option
+  Spinner, // Import Spinner
+  Text
 } from "@fluentui/react-components";
-import {
-  Book20Regular,
-  PeopleCommunity20Regular,
-  CheckmarkCircle20Regular,
-  Star20Regular,
-  Trophy20Regular,
-} from "@fluentui/react-icons";
 import { useNavigate } from "react-router-dom";
 
-// Mock Data (Replace with API Calls)
-const studentData = {
-  currentBook: "Harry Potter and the Sorcerer’s Stone",
-  badges: ["First Book!", "5 Books Read!", "Reading Streak: 7 Days"],
-  readingStreak: 7,
-  leaderboard: [
-    { name: "Alice", booksRead: 10 },
-    { name: "Bob", booksRead: 8 },
-    { name: "You", booksRead: 6 },
-  ],
-};
+export function WelcomeTab({ }: { }) {
+  const [isLoading, setIsLoading] = useState(true); // Add loading state, default true
 
-const teacherData = {
-  classProgress: 75, // 75% students actively reading
-  recentLogs: [
-    { student: "Alice", book: "1984" },
-    { student: "Bob", book: "The Hobbit" },
-    { student: "Charlie", book: "The Catcher in the Rye" },
-  ],
-  challenges: ["Read 3 Books This Month", "Finish a Classic Novel"],
-};
+  // Simulate loading or some async operation
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      // After loading, you might want to navigate or change the view
+      // For now, let's just set loading to false as an example
+      setIsLoading(false);
+      // Example: navigate('/some-other-route');
+    }, 3000); // Simulate 3 seconds loading time
 
-// User role options
-// Define role type explicitly
-type UserRole = "student" | "teacher";
-
-// Role options
-const roleOptions: { key: UserRole; text: string }[] = [
-  { key: "student", text: "Student 👦" },
-  { key: "teacher", text: "Teacher 👩‍🏫" },
-];
-export function WelcomeTab({ onRoleSelect }: { onRoleSelect: (role: UserRole) => void }) {
-  const [selectedRole, setSelectedRole] = useState<UserRole | "">("");
-  const navigate = useNavigate();
-
-  const handleContinue = () => {
-    if (selectedRole) {
-      onRoleSelect(selectedRole);
-      navigate(selectedRole === "student" ? "/student-dashboard" : "/teacher-dashboard");
-    }
-  };
+    return () => clearTimeout(timer); // Cleanup timer on component unmount
+  }, []); // Empty dependency array means this runs once on mount
 
   return (
-    <div style={{ padding: "1.6rem", textAlign: "center" }}>
-      <h2>👤 Choose Your Role</h2>
-      <Dropdown
-        placeholder="Select your role..."
-        value={selectedRole}
-        onOptionSelect={(_, data) => {
-          if (data.optionValue) setSelectedRole(data.optionValue as UserRole);
-        }}
-        style={{ width: "60%", marginBottom: "1rem" }}
-      >
-        {roleOptions.map((role) => role.text.charAt(0).toUpperCase() + role.text.slice(1))}
-      </Dropdown>
-
-      <Button
-        icon={<CheckmarkCircle20Regular />}
-        appearance="primary"
-        disabled={!selectedRole}
-        onClick={handleContinue}
-      >
-        Continue as {selectedRole === "student" ? "Student 👦" : "Teacher 👩‍🏫"}
-      </Button>
+    <div style={{
+      padding: "1.6rem",
+      textAlign: "center",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      minHeight: "80vh" // Ensure it takes up significant screen height
+    }}>
+      {isLoading ? (
+        <>
+          <Text size={600} weight="semibold" style={{ marginBottom: "1rem" }}>Aguarde</Text>
+          <Spinner size="huge" labelPosition="below" label="Carregando suas informações..." />
+        </>
+      ) : (
+        // Content to show after loading finishes (optional)
+        <Text size={500}>Carregamento concluído!</Text>
+        // Or you could navigate away in the useEffect
+      )}
     </div>
   );
 }

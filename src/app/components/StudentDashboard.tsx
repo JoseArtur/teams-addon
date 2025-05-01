@@ -300,37 +300,37 @@ return (
     )}
   </div>
 </Card>
-      <Dialog open={showCurricularFlyout} onOpenChange={(_, data) => !data.open && setShowCurricularFlyout(false)}>
-                  <DialogSurface>
-                    <DialogBody>
-                      <DialogTitle>📘 Livros Curriculares do {grade}º ano</DialogTitle>
-                      {availableCurricularBooks.length === 0 ? (
-                        <Text>Todos os livros já estão na sua estante.</Text>
-                      ) : (
-                        <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 16 }}>
-                          {availableCurricularBooks.map((book, i) => (
-                            <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                              <Checkbox
-                                checked={selectedCurricularBooks.includes(book.titulo)}
-                                onChange={() => toggleSelectBook(book.titulo)}
-                                label={`${book.titulo} – ${book.autor}`}
-                              />
-                              {book.capa && (
-                                <img src={book.capa} alt="Capa" style={{ height: 48, borderRadius: 4 }} />
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      <DialogActions>
-                        <Button onClick={() => setShowCurricularFlyout(false)}>Cancelar</Button>
-                        <Button appearance="primary" onClick={handleConfirmAddCurricular} disabled={selectedCurricularBooks.length === 0}>
-                          Adicionar à Estante
-                        </Button>
-                      </DialogActions>
-                    </DialogBody>
-                  </DialogSurface>
-                </Dialog>
+<Dialog open={showCurricularFlyout} onOpenChange={(_, data) => !data.open && setShowCurricularFlyout(false)}>
+  <DialogSurface>
+    <DialogBody style={{ maxHeight: "80vh", overflowY: "auto" }}>
+      <DialogTitle>📘 Livros Curriculares do {grade}º ano</DialogTitle>
+      {availableCurricularBooks.length === 0 ? (
+        <Text>Todos os livros já estão na sua estante.</Text>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 16 }}>
+          {availableCurricularBooks.map((book, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <Checkbox
+                checked={selectedCurricularBooks.includes(book.titulo)}
+                onChange={() => toggleSelectBook(book.titulo)}
+                label={`${book.titulo} – ${book.autor}`}
+              />
+              {book.capa && (
+                <img src={book.capa} alt="Capa" style={{ height: 48, borderRadius: 4 }} />
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+      <DialogActions>
+        <Button onClick={() => setShowCurricularFlyout(false)}>Cancelar</Button>
+        <Button appearance="primary" onClick={handleConfirmAddCurricular} disabled={selectedCurricularBooks.length === 0}>
+          Adicionar à Estante
+        </Button>
+      </DialogActions>
+    </DialogBody>
+  </DialogSurface>
+</Dialog>
     </div>
   );
 }

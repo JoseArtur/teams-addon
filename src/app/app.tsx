@@ -157,7 +157,7 @@ function App() {
             {!userRole ? (
               <Route
                 path="/welcome"
-                element={<WelcomeTab onRoleSelect={(role) => setUserRole(role)} />}
+                element={<WelcomeTab />}
               />
             ) : (
               <>

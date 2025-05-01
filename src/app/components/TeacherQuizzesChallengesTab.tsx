@@ -29,7 +29,6 @@ export function TeacherQuizzesChallengesTab({ grade, turma }: { grade: string; t
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [newDesafio, setNewDesafio] = useState({ titulo: "", descricao: "", capitulo: "", validade: "", livroId: "" });
   const [creating, setCreating] = useState(false);
   const [books, setBooks] = useState<any[]>([]);
   const [selectedBook, setSelectedBook] = useState<any>(null);
@@ -39,7 +38,15 @@ export function TeacherQuizzesChallengesTab({ grade, turma }: { grade: string; t
   const [editQuizQuestions, setEditQuizQuestions] = useState<any[]>([]);
   const [editQuizCapitulo, setEditQuizCapitulo] = useState<number | null>(null);
   const [editQuizCurrentIdx, setEditQuizCurrentIdx] = useState(0);
-
+  const [newDesafio, setNewDesafio] = useState({
+    titulo: "",
+    descricao: "", // Assuming you might add a description field later
+    tipo: "ler-paginas", // Default type
+    valor: "", // For pages or chapter number
+    validade: "",
+    livroId: "",
+    pontos: 0, // Initialize pontos
+  });
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
@@ -148,22 +155,7 @@ export function TeacherQuizzesChallengesTab({ grade, turma }: { grade: string; t
     setQuizzes(quizzes.filter((q: any) => q.id !== quizId));
   };
 
-  // Criar novo desafio
-  const handleCreateDesafio = async () => {
-    setCreating(true);
-    await createDesafio({
-      ...newDesafio,
-      grade,
-      turma,
-      livroId: selectedBook.id,
-      capitulo: Number(newDesafio.capitulo),
-    });
-    setShowCreateDialog(false);
-    setCreating(false);
-    setNewDesafio({ titulo: "", descricao: "", capitulo: "", validade: "", livroId: "" });
-    const dsf = await getDesafios(grade, turma);
-    setDesafios(dsf);
-  };
+
 
   // Remover desafio
   const handleRemoveDesafio = async (desafioId: string) => {
@@ -179,7 +171,51 @@ export function TeacherQuizzesChallengesTab({ grade, turma }: { grade: string; t
       pendentes: students.filter((a: any) => !concluidos.includes(a.email)),
     };
   };
-
+  const handleCreateDesafio = async () => {
+    setCreating(true);
+    // Prepare data based on type
+    const desafioData: any = {
+      titulo: newDesafio.titulo,
+      tipo: newDesafio.tipo,
+      validade: newDesafio.validade,
+      pontos: newDesafio.pontos,
+      grade,
+      turma,
+      livroId: selectedBook.id, // Associate with the selected book
+    };
+  
+    // Add 'valor' (pages or chapter) if applicable
+    if (newDesafio.tipo === "ler-paginas" || newDesafio.tipo === "concluir-capitulo" || newDesafio.tipo === "responder-quiz") {
+      desafioData.valor = Number(newDesafio.valor);
+    }
+    // If type is 'responder-quiz' or 'concluir-capitulo', 'valor' represents the chapter
+    if (newDesafio.tipo === "concluir-capitulo" || newDesafio.tipo === "responder-quiz") {
+      desafioData.capitulo = Number(newDesafio.valor);
+    }
+    // If type is 'ler-paginas', 'valor' represents the number of pages
+    if (newDesafio.tipo === "ler-paginas") {
+      desafioData.paginas = Number(newDesafio.valor);
+    }
+  
+    await createDesafio(desafioData);
+  
+    setShowCreateDialog(false);
+    setCreating(false);
+    // Reset state including new fields
+    setNewDesafio({
+      titulo: "",
+      descricao: "",
+      tipo: "ler-paginas",
+      valor: "",
+      validade: "",
+      livroId: "",
+      pontos: 0,
+    });
+    // Refetch desafios after creation
+    const dsf = await getDesafios(grade, turma);
+    setDesafios(dsf);
+  };
+  
   return (
     <div style={{ padding: "2rem" }}>
       <h1>🏁 Gerenciar Quizzes e Desafios</h1>
@@ -204,31 +240,84 @@ export function TeacherQuizzesChallengesTab({ grade, turma }: { grade: string; t
         ➕ Criar novo desafio
       </Button>
 
-      <Dialog open={showCreateDialog} onOpenChange={(_, data) => !data.open && setShowCreateDialog(false)}>
-        <DialogSurface>
-          <DialogBody>
-            <DialogTitle>Criar novo desafio</DialogTitle>
-            <Field label="Título">
-              <Input value={newDesafio.titulo} onChange={e => setNewDesafio(d => ({ ...d, titulo: e.target.value }))} />
-            </Field>
-            <Field label="Descrição">
-              <Input value={newDesafio.descricao} onChange={e => setNewDesafio(d => ({ ...d, descricao: e.target.value }))} />
-            </Field>
-            <Field label="Capítulo">
-              <Input type="number" value={newDesafio.capitulo} onChange={e => setNewDesafio(d => ({ ...d, capitulo: e.target.value }))} />
-            </Field>
-            <Field label="Data limite">
-              <Input type="date" value={newDesafio.validade} onChange={e => setNewDesafio(d => ({ ...d, validade: e.target.value }))} />
-            </Field>
-            <DialogActions>
-              <Button onClick={() => setShowCreateDialog(false)}>Cancelar</Button>
-              <Button appearance="primary" onClick={handleCreateDesafio} disabled={creating}>
-                {creating ? <Spinner size="tiny" /> : "Criar"}
-              </Button>
-            </DialogActions>
-          </DialogBody>
-        </DialogSurface>
-      </Dialog>
+    
+<Dialog open={showCreateDialog} onOpenChange={(_, data) => !data.open && setShowCreateDialog(false)}>
+  {/* Increase the size of the DialogSurface */}
+  <DialogSurface style={{ minWidth: 600, width: "80vw", maxWidth: 800 }}> 
+      <DialogBody>
+        <DialogTitle>🎯 Criar novo desafio</DialogTitle>
+
+        <Field label="Tipo de desafio" hint="Escolha o tipo de meta que os alunos devem cumprir.">
+          <Dropdown
+            value={newDesafio.tipo} // Use the text value for display if needed, or manage selectedKey separately
+            selectedOptions={[newDesafio.tipo]} // Control selection via state
+            onOptionSelect={(_, data) => {
+              if (data.optionValue) {
+                setNewDesafio((d) => ({
+                  ...d,
+                  tipo: data.optionValue as string,
+                  valor: "", // Reset valor when type changes
+                }));
+              }
+            }}
+          >
+            <Option value="ler-paginas">📖 Ler X páginas até data</Option>
+            <Option value="concluir-capitulo">📘 Ler até capítulo X</Option>
+            <Option value="concluir-livro">🏁 Concluir o livro</Option>
+            <Option value="responder-quiz">🧠 Responder ao quiz do capítulo X</Option>
+          </Dropdown>
+        </Field>
+
+        <Field label="Título do desafio">
+          <Input
+            placeholder="Ex: Ler até o final do capítulo 2"
+            value={newDesafio.titulo}
+            onChange={(e) => setNewDesafio((d) => ({ ...d, titulo: e.target.value }))}
+            required // Make title required
+          />
+        </Field>
+
+        {/* Conditionally render based on type */}
+        {(newDesafio.tipo === "ler-paginas" || newDesafio.tipo === "concluir-capitulo" || newDesafio.tipo === "responder-quiz") && (
+          <Field label={newDesafio.tipo === "ler-paginas" ? "Número de páginas" : "Capítulo"}>
+            <Input
+              type="number"
+              value={newDesafio.valor || ""}
+              onChange={(e) => setNewDesafio((d) => ({ ...d, valor: e.target.value }))}
+              required // Make value required if field is shown
+              min="1" // Ensure positive number
+            />
+          </Field>
+        )}
+
+        <Field label="Data limite">
+          <Input
+            type="date"
+            value={newDesafio.validade}
+            onChange={(e) => setNewDesafio((d) => ({ ...d, validade: e.target.value }))}
+            required // Make date required
+          />
+        </Field>
+
+        <Field label="Pontos a atribuir" hint="Quantos pontos os alunos ganham se cumprirem?">
+          <Input
+            type="number"
+            value={newDesafio.pontos !== undefined ? String(newDesafio.pontos) : ""} // Ensure value is a string
+            onChange={(e) => setNewDesafio((d) => ({ ...d, pontos: parseInt(e.target.value) || 0 }))}
+            required // Make points required
+            min="0" // Ensure non-negative points
+          />
+        </Field>
+
+      <DialogActions>
+        <Button onClick={() => setShowCreateDialog(false)}>Cancelar</Button>
+        <Button appearance="primary" onClick={handleCreateDesafio} disabled={creating}>
+          {creating ? <Spinner size="tiny" /> : "Criar desafio"}
+        </Button>
+      </DialogActions>
+    </DialogBody>
+  </DialogSurface>
+</Dialog>
 
       {/* Quizzes por capítulo */}
       <Card style={{ margin: "1rem 0", padding: 16 }}>
