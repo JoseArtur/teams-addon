@@ -8,7 +8,8 @@ import {
   Text,
   Badge,
 } from "@fluentui/react-components";
-import { getDesafios, getPoints,getCompletedDesafios } from "../services/api";
+import { getDesafios, getPoints, getCompletedDesafios } from "../services/api";
+
 export function ChallengesTab({ userRole, email, grade, turma }: {
   userRole: "student" | "teacher";
   email: string;
@@ -30,6 +31,7 @@ export function ChallengesTab({ userRole, email, grade, turma }: {
         ]);
         setDesafios(dsf);
         setPontos(pts.total);
+        console.log("Concluidos:", concluidosResp);
         setConcluidos(concluidosResp.map((c: any) => c.desafioId));
       }
       setLoading(false);
@@ -37,9 +39,9 @@ export function ChallengesTab({ userRole, email, grade, turma }: {
     fetchData();
   }, [email, turma, userRole]);
 
-  const isExpired = (validade: string) => {
+  const isExpired = (dataFim: string) => {
     const hoje = new Date();
-    const limite = new Date(validade);
+    const limite = new Date(dataFim);
     return hoje > limite;
   };
 
@@ -60,16 +62,18 @@ export function ChallengesTab({ userRole, email, grade, turma }: {
               <Text>Nenhum desafio ativo.</Text>
             ) : (
               desafios.map((d) => {
-                const expirado = isExpired(d.validade);
+                const expirado = isExpired(d.dataFim);
                 const jaConcluido = concluidos.includes(d.id);
                 return (
                   <Card key={d.id} style={{ marginBottom: "1rem" }}>
                     <CardHeader
                       header={d.titulo}
-                      description={`📘 Capítulo ${d.capitulo} | Até: ${d.validade}`}
+                      description={`${d.tipo === "livro-especifico" ? "📘 Livro Específico" : "📚 Geral"} | Até: ${new Date(d.dataFim).toLocaleDateString()}`}
                     />
                     <div style={{ padding: "0 1rem 1rem" }}>
                       <Text>{d.descricao}</Text><br />
+                      <Text><b>Meta:</b> {d.meta.points} {d.meta.tipo}</Text><br />
+                      {d.badge && <><Text><b>Badge:</b> {d.badge.nome}</Text><br /></>}
                       {jaConcluido && <Badge color="brand" appearance="filled">✅ Concluído</Badge>}
                       {!jaConcluido && expirado && <Badge color="danger" appearance="outline">⏰ Prazo Encerrado</Badge>}
                       {!jaConcluido && !expirado && <Badge appearance="outline">⏳ Em andamento</Badge>}

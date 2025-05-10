@@ -1,5 +1,5 @@
-const API_URL = "https://teams-be.azurewebsites.net/api";
-//const API_URL = "http://localhost:7071/api";
+//const API_URL = "https://teams-be.azurewebsites.net/api";
+const API_URL = "http://localhost:7071/api";
 
 export interface Book {
   title: string;
@@ -25,7 +25,7 @@ export interface GetStudentInfoResponse {
   grade: string;
   turma: string;
   booksRead: string[];
-
+  points: number;
   currentlyReading: string[];
   createdAt: string;
   // Add other fields as needed
@@ -83,8 +83,9 @@ export function getLeaderboard(classId: string) {
   return getData("getLeaderboard", { classId });
 }
 
-export function getStudentHistory(email: string) {
-  return getData("getStudentHistory", { email });
+export async function getStudentHistory(email: string) {
+  const response = await getData("getStudentHistory", { email });
+  return response.jsonBody || response;
 }
 
 export function addCurricularBook(bookData: any) {
@@ -163,14 +164,14 @@ export async function registerStudentAndBooks({  email, grade, books }: {
  * Logs the reading progress of a student.
  * @param email - The ID of the student.
  * @param bookId - The ID of the book.
- * @param pageNumber - The current page number the student has read.
+ * @param currentPage - The current page number the student has read.
  * @param status - Optional status of the reading progress ("reading" or "finished").
  * @param notes - Optional notes about the reading progress.
  */
 export async function registerReadingProgress(
   email: string,
   bookId: string,
-  pageNumber: number,
+  currentPage: number,
   status?: string,
   notes?: string
 ): Promise<void> {
@@ -178,7 +179,7 @@ export async function registerReadingProgress(
     console.log("Registering reading progress:", {
       email,
       bookId,
-      pageNumber,
+      currentPage,
       status,
       notes,
     });
@@ -188,7 +189,7 @@ export async function registerReadingProgress(
       body: JSON.stringify({
         email,
         bookId,
-        pageNumber,
+        currentPage,
         status,
         notes,
       }),
@@ -348,11 +349,11 @@ export async function getAnsweredQuizzes(email: string): Promise<any[]> {
   }
 }
 
-export async function addPointsToUser(email: string, tipo: string, valor: number, detalhes?: string) {
+export async function addPointsToUser(email: string, tipo: string, points: number, detalhes?: string) {
   const response = await fetch(`${API_URL}/addPointsToUser`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, tipo, valor, detalhes }),
+    body: JSON.stringify({ email, tipo, points, detalhes }),
   });
   if (!response.ok) throw new Error("Erro ao adicionar pontos");
   return response.json();
@@ -380,9 +381,10 @@ export async function createDesafio(desafio: any) {
 
 // Retorna desafios ativos da turma
 export async function getDesafios(grade: string, turma: string) {
-  const response = await fetch(`${API_URL}/getDesafios?grade=${grade}&turma=${turma}`);
-  if (!response.ok) throw new Error("Erro ao buscar desafios");
-  return response.json();
+    const response = await fetch(`${API_URL}/getDesafiosTurma?grade=${encodeURIComponent(grade)}&turma=${encodeURIComponent(turma)}`);
+    if (!response.ok) throw new Error("Erro ao buscar desafios");
+    const data = await response.json();
+    return data;
 }
 
 // Marca desafio como concluído e adiciona pontos
@@ -482,6 +484,7 @@ export async function getStudentStatsToday(email: string) {
 
 // 1. Busca turmas do professor
 export async function getClasses(email: string) {
+  console.log("Fetching classes for email:", email);
   const response = await fetch(`${API_URL}/getClasses?email=${encodeURIComponent(email)}`);
   if (!response.ok) throw new Error("Erro ao buscar turmas");
   return response.json();
@@ -530,9 +533,6 @@ export async function getStudentQuizzes(email: string) {
 export async function removeQuiz(quizId: string): Promise<void> {
   // Add the implementation for removing a quiz
 }
-export async function removeDesafio(desafioId: string): Promise<void> {
-  // Add the implementation for removing a desafio
-}
 
 export async function updateQuiz(quiz: {
   id: string;
@@ -542,6 +542,8 @@ export async function updateQuiz(quiz: {
   bookId: string;
   ciclo: string;
   grade: string;
+  leituraDedicada?: string;
+  quizDeadline?: string;
 }) {
   const response = await fetch(`${API_URL}/updateQuiz`, {
     method: "PUT",
@@ -557,5 +559,351 @@ export async function updateQuiz(quiz: {
 export async function getBadgeInfo(id: string) {
   const response = await fetch(`${API_URL}/getBadgeInfo?id=${id}`);
   if (!response.ok) throw new Error("Erro ao buscar informações do badge");
+  return response.json();
+}
+/**
+ * Salva pontos de gamificação para o aluno.
+ */
+export async function addGamificationPoints(entry: {
+  email: string;
+  tipo: string;
+  points: number;
+  detalhes: string;
+  earnedAt: string;
+}) {
+  const response = await fetch(`${API_URL}/addGamificationPoints`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(entry),
+  });
+  if (!response.ok) throw new Error("Erro ao salvar pontos de gamificação");
+  return response.json();
+} 
+
+export async function setEscolhidoBook(email: string, escolhido: any) {
+  console.log("Definindo livro escolhido:", { email, escolhido });
+  const response = await fetch(`${API_URL}/setEscolhidoBook`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, escolhido }),
+  });
+  if (!response.ok) throw new Error("Erro ao definir livro escolhido");
+  return response.json();
+}
+
+/**
+ * Busca o livro escolhido do aluno do backend.
+ */
+export async function getEscolhidoBook(email: string) {
+  const response = await fetch(`${API_URL}/getEscolhidoBook?email=${encodeURIComponent(email)}`);
+
+  if (!response.ok) throw new Error("Erro ao buscar livro escolhido");
+  return response.json();
+}
+
+/**
+ * Retorna as perguntas abertas do quiz do livro escolhido para um dado terço.
+ * As perguntas são as mesmas para qualquer livro.
+ * @param terco number (1, 2, 3)
+ */
+export async function getEscolhidoQuizQuestion(terco: string, email: string): Promise<{perguntas: string[], quizId: string}> {
+  const response = await fetch(`${API_URL}/getEscolhidoQuizQuestion?terco=${terco}&email=${encodeURIComponent(email)}`);
+  if (!response.ok) throw new Error("Erro ao buscar perguntas do quiz do livro escolhido");
+  return response.json();
+}
+
+/**
+ * Salva as respostas do quiz do livro escolhido para o aluno.
+ * @param params { email, fase, respostas, livroEscolhido }
+ * @returns { success: boolean, doc: any }
+ */
+export async function setEscolhidoQuizAnswer(params: {
+  email: string;
+  fase: string; // "final", "terco-1", "terco-2"
+  respostas: string[];
+  livroEscolhido: { id: string; titulo: string; autor: string };
+}): Promise<{ success: boolean; doc: any }> {
+  const response = await fetch(`${API_URL}/setEscolhidoQuizAnswer`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(params),
+  });
+  if (!response.ok) throw new Error("Erro ao salvar respostas do quiz do livro escolhido");
+  return response.json();
+}
+export async function getAlunosEscolhidos(grade: string, turma: string) {
+  const response = await fetch(
+    `${API_URL}/getAlunosEscolhidos?grade=${encodeURIComponent(grade)}&turma=${encodeURIComponent(turma)}`,
+    { headers: baseHeaders }
+  );
+  if (!response.ok) throw new Error("Erro ao buscar alunos com livro escolhido");
+  return response.json();
+}
+
+
+// MOCK: Atualiza avaliação do quiz (patch)
+export async function patchQuizAnswer(quizId: string, data: Partial<{ nota: string; comentario: string; anulado: boolean }>) {
+  // Simula um patch no backend
+  const response = await fetch(`${API_URL}/patchQuizAnswer?id=${encodeURIComponent(quizId)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error("Erro ao atualizar avaliação do quiz");
+  return response.json();
+}
+// Busca as perguntas do quiz do professor para um terço específico de uma turma
+export async function getTeacherQuiz({
+  grade,
+  turma,
+  terco,
+}: {
+  grade: string;
+  turma: string;
+  terco: number;
+}): Promise<{ perguntas: string[] }> {
+  const response = await fetch(
+    `${API_URL}/getTeacherQuiz?grade=${encodeURIComponent(grade)}&turma=${encodeURIComponent(turma)}&terco=${encodeURIComponent(terco)}`,
+    { headers: baseHeaders }
+  );
+  if (!response.ok) throw new Error("Erro ao buscar quiz do professor");
+  return response.json();
+}
+
+// Salva (cria ou atualiza) as perguntas do quiz do professor para um terço específico de uma turma
+export async function setTeacherQuiz({
+  grade,
+  turma,
+  terco,
+  perguntas,
+  professorEmail
+}: {
+  grade: string;
+  turma: string;
+  terco: string;
+  perguntas: string[];
+  professorEmail: string;
+}): Promise<any> {
+  console.log("setTeacherQuiz", { grade, turma, terco, perguntas, professorEmail });
+  const response = await fetch(`${API_URL}/setTeacherQuiz`, {
+    method: "POST",
+    headers: baseHeaders,
+    body: JSON.stringify({ grade, turma, terco, perguntas, professorEmail }),
+  });
+  if (!response.ok) throw new Error("Erro ao salvar quiz do professor");
+  return response.json();
+}
+
+// Exclui o quiz do professor para um terço específico de uma turma
+export async function deleteTeacherQuiz({
+  grade,
+  turma,
+  terco,
+}: {
+  grade: string;
+  turma: string;
+  terco: number;
+}): Promise<any> {
+  const response = await fetch(
+    `${API_URL}/deleteTeacherQuiz?grade=${encodeURIComponent(grade)}&turma=${encodeURIComponent(turma)}&terco=${encodeURIComponent(terco)}`,
+    { method: "DELETE", headers: baseHeaders }
+  );
+  if (!response.ok) throw new Error("Erro ao excluir quiz do professor");
+  return response.json();
+}
+
+// Busca um quiz do professor por ID
+export async function getTeacherQuizById(quizId: string): Promise<any> {
+  console.log("getTeacherQuizById", { quizId });
+  const response = await fetch(
+    `${API_URL}/getTeacherQuizById?id=${encodeURIComponent(quizId)}`,
+    { headers: baseHeaders }
+  );
+  if (!response.ok) throw new Error("Erro ao buscar quiz por ID");
+  return response.json();
+}
+
+export interface Desafio {
+    id: string;
+    titulo: string;
+    descricao: string;
+    tipo: "geral" | "livro-especifico";
+    livroId?: string;
+    grade: string;
+    turma: string;
+    dataInicio: string;
+    dataFim: string;
+    meta: {
+        tipo: "paginas" | "livros" | "tempo";
+        points: number;
+    };
+    badge: {
+        id: string;
+        nome: string;
+    };
+    criadoPor: string;
+    earnedAt: string;
+    status: "ativo" | "concluido" | "cancelado";
+    progresso?: number;
+}
+
+export async function criarDesafio(desafio: Omit<Desafio, "id" | "earnedAt" | "status">) {
+    const response = await fetch(`${API_URL}/criarDesafio`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(desafio),
+    });
+    if (!response.ok) throw new Error("Erro ao criar desafio");
+    return response.json();
+}
+
+export async function getDesafiosTurma(turma: string, grade: string) {
+    const response = await fetch(`${API_URL}/getDesafiosTurma?turma=${encodeURIComponent(turma)}&grade=${encodeURIComponent(grade)}`);
+    if (!response.ok) throw new Error("Erro ao buscar desafios da turma");
+    return response.json();
+}
+
+export async function getDesafiosAluno(email: string) {
+    const response = await fetch(`${API_URL}/getDesafiosAluno?email=${encodeURIComponent(email)}`);
+    if (!response.ok) throw new Error("Erro ao buscar desafios do aluno");
+    return response.json();
+}
+
+export async function atualizarProgressoDesafio(desafioId: string, email: string, progresso: number) {
+    const response = await fetch(`${API_URL}/atualizarProgressoDesafio`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ desafioId, email, progresso }),
+    });
+    if (!response.ok) throw new Error("Erro ao atualizar progresso do desafio");
+    return response.json();
+}
+
+export async function removerDesafio(desafioId: string) {
+    const response = await fetch(`${API_URL}/removerDesafio?id=${encodeURIComponent(desafioId)}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" }
+    });
+    if (!response.ok) throw new Error("Erro ao remover desafio");
+    return response.json();
+}
+
+export async function verificarConclusaoDesafio(
+    email: string,
+    progresso: number,
+    tipo: string,
+    bookId: string
+): Promise<any> {
+    const response = await fetch(`${API_URL}/verificarConclusaoDesafio?email=${encodeURIComponent(email)}&progresso=${progresso}&tipo=${tipo}&bookId=${bookId}`);
+    
+    if (!response.ok) {
+        throw new Error('Erro ao verificar conclusão do desafio');
+    }
+
+    const data = await response.json();
+    return data;
+}
+
+export async function submitEscolhidoQuizAnswers(email: string, bookId: string, terco: number, respostas: string[],quizId: string) {
+  console.log("submitEscolhidoQuizAnswers", { email, bookId, terco, respostas });
+  const response = await fetch(`${API_URL}/submitEscolhidoQuizAnswers`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      email,
+      bookId,
+      terco,
+      respostas,
+      quizId
+    }),
+  });
+  if (!response.ok) throw new Error('Failed to submit quiz answers');
+  return response.json();
+}
+
+export async function getAnsweredEscolhidoQuizzes(email: string) {
+  const response = await fetch(`${API_URL}/getAnsweredEscolhidoQuizzes?email=${encodeURIComponent(email)}`);
+  if (response.status === 404) {
+    return []; // Return empty array if no quizzes found
+  }
+  if (!response.ok) throw new Error('Failed to fetch answered quizzes');
+  return response.json();
+}
+
+export async function removeBookFromShelf(email: string, bookId: string) {
+  const response = await fetch(`${API_URL}/removeBookFromShelf`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, bookId }),
+  });
+  if (!response.ok) throw new Error("Erro ao remover livro da estante");
+  return response.json();
+}
+
+export async function updateBookDetails(bookId: string, updates: { paginas?: number }) {
+  const response = await fetch(`${API_URL}/updateBookDetails`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ bookId, ...updates }),
+  });
+  if (!response.ok) throw new Error("Erro ao atualizar detalhes do livro");
+  return response.json();
+}
+
+export interface PointsExplanation {
+    totalPoints: number;
+    pointsByType: {
+        completion: number;
+        quiz: number;
+        firstProgress: number;
+        streak: number;
+        challenges: number;
+    };
+    lastPoints: {
+        type: string;
+        points: number;
+        description: string;
+        date: string;
+        bookTitle?: string;
+    }[];
+}
+
+export async function getPointsExplanation(email: string): Promise<PointsExplanation> {
+    const response = await fetch(`${API_URL}/getPointsExplanation?email=${email}`);
+    if (!response.ok) {
+        throw new Error('Failed to fetch points explanation');
+    }
+    return response.json();
+}
+
+export async function submitSupport(email: string, name: string, message: string) {
+  const response = await fetch(`${API_URL}/submitSupport`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ 
+      email, 
+      name, 
+      message,
+      timestamp: new Date().toISOString()
+    }),
+  });
+  if (!response.ok) throw new Error("Erro ao enviar mensagem de suporte");
+  return response.json();
+}
+
+export async function registerStudentRequest(data: {
+  name: string;
+  year: string;
+  classLetter: string;
+  timestamp: string;
+}) {
+  const response = await fetch(`${API_URL}/registerStudentRequest`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error("Erro ao enviar pedido de registo");
   return response.json();
 }

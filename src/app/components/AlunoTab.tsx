@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Card, Text, Table, TableHeader, TableRow, TableHeaderCell, TableBody, TableCell, Badge } from "@fluentui/react-components";
-import { getStudentLogs, getStudentQuizzes } from "../services/api";
+import { getStudentLogs, getStudentQuizzes, getPoints } from "../services/api";
 import { useNavigate } from "react-router-dom";
 
 // ...imports...
@@ -10,6 +10,8 @@ export function AlunoTab({ aluno, grade, turma, bookId }: { aluno: any; grade: s
     const [quizzes, setQuizzes] = useState<any[]>([]);
     const [booksRead, setBooksRead] = useState<any[]>([]);
     const [booksReading, setBooksReading] = useState<any[]>([]);
+    const [pointsHistory, setPointsHistory] = useState<any[]>([]);
+    const [totalPoints, setTotalPoints] = useState<number>(0);
     const navigate = useNavigate();
     useEffect(() => {
         async function load() {
@@ -17,6 +19,11 @@ export function AlunoTab({ aluno, grade, turma, bookId }: { aluno: any; grade: s
             setLogs(logsData);
             const quizzesData = await getStudentQuizzes(aluno.email);
             setQuizzes(quizzesData);
+
+            // Get points history
+            const { total, historico } = await getPoints(aluno.email);
+            setTotalPoints(total);
+            setPointsHistory(historico);
 
             // Agrupa livros por título usando log.bookTitle
             const books: Record<string, any[]> = logsData.reduce((acc: Record<string, any[]>, log: any) => {
@@ -156,6 +163,34 @@ export function AlunoTab({ aluno, grade, turma, bookId }: { aluno: any; grade: s
                                     <TableCell>{quiz.capitulo ?? "-"}</TableCell>
                                     <TableCell>{quiz.pontuacao ?? "-"}</TableCell>
                                     <TableCell>{formatDate(quiz.respondidoEm)}</TableCell>
+                                </TableRow>
+                            ))
+                        )}
+                    </TableBody>
+                </Table>
+            </Card>
+
+            <Card style={{ margin: "16px 0", padding: 16 }}>
+                <Text weight="semibold">🏆 Pontos ({totalPoints} pontos totais)</Text>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHeaderCell>Data</TableHeaderCell>
+                            <TableHeaderCell>Pontos</TableHeaderCell>
+                            <TableHeaderCell>Descrição</TableHeaderCell>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {pointsHistory.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={3}>Nenhum ponto registrado.</TableCell>
+                            </TableRow>
+                        ) : (
+                            pointsHistory.map((point, i) => (
+                                <TableRow key={i}>
+                                    <TableCell>{formatDate(point.earnedAt || point.earnedAt)}</TableCell>
+                                    <TableCell>{point.points}</TableCell>
+                                    <TableCell>{point.description || point.detalhes}</TableCell>
                                 </TableRow>
                             ))
                         )}

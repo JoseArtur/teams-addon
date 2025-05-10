@@ -50,6 +50,14 @@ export function TeacherDashboard({ email }: { email: string }) {
     }
     loadInitial();
   }, [email]);
+  useEffect(() => {
+    if (
+      turmaSelecionada &&
+      ["5", "6", "7", "8"].includes(String(turmaSelecionada.grade))
+    ) {
+      navigate("/teacher-escolhidos", { state: { email, turmaSelecionada } });
+    }
+  }, [turmaSelecionada, navigate]);
 
   // Carrega livros do backend ao mudar turma
   useEffect(() => {
@@ -175,7 +183,33 @@ export function TeacherDashboard({ email }: { email: string }) {
 >
   Quizzes e Desafios
 </Button>
-    
+        {classData && classData.length > 0 && (
+          <Dropdown
+            placeholder="Ver como Aluno"
+            onOptionSelect={(_, data) => {
+              const student = classData.find((s: any) => s.name === data.optionValue);
+              if (student) {
+                navigate("/student-dashboard", { 
+                  state: { 
+                    studentInfo: {
+                      email: student.email,
+                      name: student.name,
+                      grade: turmaSelecionada.grade,
+                      turma: turmaSelecionada.turma
+                    },
+                    isTeacherView: true
+                  }
+                });
+              }
+            }}
+          >
+            {classData.map((student: any) => (
+              <Option key={student.email} value={student.name}>
+                {student.name}
+              </Option>
+            ))}
+          </Dropdown>
+        )}
           </div>
       <Text size={700} weight="bold">
         👩‍🏫 Painel do Professor

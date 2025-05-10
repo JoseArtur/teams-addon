@@ -118,7 +118,6 @@ export function StudentsTab({ grade, turma, bookId }: { grade: string; turma: st
         <TableHeader>
           <TableRow>
             <TableHeaderCell>Nome</TableHeaderCell>
-            <TableHeaderCell>Progresso</TableHeaderCell>
             <TableHeaderCell>Pontos</TableHeaderCell>
             <TableHeaderCell>Última leitura</TableHeaderCell>
             <TableHeaderCell>Badges</TableHeaderCell>

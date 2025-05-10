@@ -28,7 +28,8 @@ import { StudentsTab } from "./static_tabs/list";
 import { useLocation } from "react-router-dom";
 import { AlunoTab } from "./components/AlunoTab";
 import { TeacherQuizzesChallengesTab } from "./components/TeacherQuizzesChallengesTab";
-
+import { TeacherEscolhidosDashboard } from "./components/TeacherEscolhidosDashboard";
+import { TeacherChallengesTab } from "./components/TeacherChalengesTab";
 function MeusAlunosWrapper() {
   const location = useLocation();
   const turmaSelecionada = location.state?.turmaSelecionada;
@@ -70,26 +71,73 @@ function AlunoWrapper() {
     />
   );
 }
+
 // quizzes-desafios"
 function TeacherQuizzesChallengesWrapper() {
   const location = useLocation();
   const turmaSelecionada = location.state?.turmaSelecionada;
   const livroSelecionado = location.state?.livroSelecionado;
+  const email = location.state?.email;
   const grade = location.state?.grade;
   const turma = location.state?.turma;
   const bookId = location.state?.bookId;
-  if (!turmaSelecionada || !livroSelecionado) {
+  if (!turmaSelecionada ) {
     return <div>Selecione uma turma e um livro no painel do professor.</div>;
   }
   return (
     <TeacherQuizzesChallengesTab
       grade={turmaSelecionada.grade}
       turma={turmaSelecionada.turma}
+      email={email}
     />
   );
 
 }
 
+
+function TeacherEscolhidosDashboardWrapper() {
+  const location = useLocation();
+
+  const email = location.state?.email;
+  if (!email) {
+    return <div>Selecione um email no painel do professor.</div>;
+  }
+  return (
+    <TeacherEscolhidosDashboard
+    email ={email}
+    />
+  );
+}
+
+function TeacherChallengesTabWrapper() {
+  const location = useLocation();
+  const turmaSelecionada = location.state?.turmaSelecionada;
+
+  const email = location.state?.email;
+  console.log("email", email);
+  console.log("turmaSelecionada", turmaSelecionada);
+  if (!turmaSelecionada ) {
+    return <div>Selecione uma turma painel do professor.</div>;
+  }
+  return (
+    <TeacherChallengesTab
+      grade={turmaSelecionada.grade}
+      turma={turmaSelecionada.turma}
+      email={email}
+    />
+  );
+
+}
+function StudentDashboardWrapper() {
+  const location = useLocation();
+  const studentInfo = location.state?.studentInfo;
+  if (!studentInfo) {
+    return <div>Aluno não encontrado.</div>;
+  }
+  return (
+    <StudentDashboard studentInfo={studentInfo} />
+  );
+}
 function App() {
   const [appContext, setAppContext] = useState<microsoftTeams.app.Context>();
   const [appAppearance, setAppAppearance] = useState<themeNames>(themeNames.Default);
@@ -103,8 +151,9 @@ function App() {
       setAppContext(context);
       setAppAppearance(initTeamsTheme(context.app.theme));
 
-      const userEmail = context.user?.userPrincipalName || "";
-//      const userEmail = "jose_artur@81mnlw.onmicrosoft.com"
+     const userEmail = context.user?.userPrincipalName || "";
+      console.log("context", context);
+  //  const userEmail = "awsrtur@escolaglobal.org"
       console.log("User email:", userEmail);
       setemail(userEmail);
 
@@ -137,12 +186,12 @@ function App() {
 
 
       microsoftTeams.app.notifySuccess();
-    })
+    })  
 
-    microsoftTeams.app.registerOnThemeChangeHandler((theme) => {
+    microsoftTeams.app.registerOnThemeChangeHandler((theme) => { 
       setAppAppearance(initTeamsTheme(theme));
     });
-  }, []);
+  }, []); 
   return (
     <FluentProvider theme={teamsLightTheme}>
       <Router>
@@ -181,12 +230,31 @@ function App() {
                     />
                     <Route path="/aluno" element={<AlunoWrapper />} />
                     <Route
+                      path="/teacher-escolhidos"
+                      element={
+                        <TeacherEscolhidosDashboardWrapper />
+                      }
+                    />
+                    <Route
                       path="/quizzes-desafios"
                       element={
                         <TeacherQuizzesChallengesWrapper />
                       }
                     />
+                    <Route
+                      path="/teacher-challenges"
+                      element={
+                        <TeacherChallengesTabWrapper />
+                      }
+                    />
+                    <Route
+                    path='/student-dashboard'
+                    element={
+                      <StudentDashboardWrapper />
+                    }
+                    />
                   </>
+
 
                 )}
                 {userRole === "student" && (
@@ -203,7 +271,7 @@ function App() {
                   element={
                     <ChallengesTab
                       userRole={userRole}
-                      email={studentInfo?.id || ""}
+                      email={studentInfo?.email || ""}
                       grade={studentInfo?.grade || ""}
                       turma={studentInfo?.turma || ""}
                     />
